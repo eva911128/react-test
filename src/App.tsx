@@ -67,7 +67,7 @@ class ItemInput extends Component<IPropsItem,IStateItem>{
       }
     }
   }
-  changeEditInput(event:any){
+  changeEditInput(event:ChangeEvent<HTMLInputElement>){
     this.setState({
       name:event.target.value
     })
