@@ -1,19 +1,23 @@
-import React, { Component } from 'react';
+import React, { Component, ChangeEvent, MouseEvent, KeyboardEvent} from 'react';
 import logo from './logo.svg';
 import './App.css';
 
 
+interface IList{
+  id:number,
+  name:string
+}
+
 interface IState {
-  list: object[],
+  list: IList[],
   inputValue:string,
-  search:object[],
-  btnType:string
+  search:IList[]
 }
 interface IProps{
 
 }
 interface IPropsItem{
-  itemObj:any,
+  itemObj:IList,
   onDeleteItem:any
   onEditItem:any
 }
@@ -34,11 +38,11 @@ class ItemInput extends Component<IPropsItem,IStateItem>{
     this.handleKeydown = this.handleKeydown.bind(this);
     this.state = {
       name:this.props.itemObj.name,
-      show:true
+      show:true 
     }
   }
-  deleteItem(event:any){
-    let id:number = event.target.getAttribute('data-id');
+  deleteItem(event:MouseEvent<HTMLInputElement>){
+    let id = event.currentTarget.getAttribute('data-id');
     this.props.onDeleteItem(id);
   }
   editItem(){
@@ -50,9 +54,9 @@ class ItemInput extends Component<IPropsItem,IStateItem>{
     });
    
   }
-  handleKeydown(event:any){
+  handleKeydown(event:KeyboardEvent<HTMLInputElement>){
     if(event.keyCode === 13){
-      let id = event.target.getAttribute('data-id');
+      let id = event.currentTarget.getAttribute('data-id');
       let name = this.state.name;
       if(name == this.props.itemObj.name){
         this.setState((prevState)=> ({
@@ -69,10 +73,9 @@ class ItemInput extends Component<IPropsItem,IStateItem>{
     })
   }
   render(){
-    let id = this.props.itemObj.id;
-    let name = this.props.itemObj.name;
-    let stateName = this.state.name;
-    let show = this.state.show;
+    const {id,name} = this.props.itemObj;
+    const stateName = this.state.name;
+    const show = this.state.show;
 
     return (
        <li>
@@ -87,21 +90,22 @@ class ItemInput extends Component<IPropsItem,IStateItem>{
 
 
 class App extends Component<IProps, IState>  {
+  btnType:string='';
   constructor(props:IProps){
     super(props);
     this.state = {
       list:[],
       inputValue:'',
-      search:[],
-      btnType:''
+      search:[]
     }
     this.deleteItem = this.deleteItem.bind(this);
     this.addItem = this.addItem.bind(this);
     this.searchItem = this.searchItem.bind(this);
     this.editItem = this.editItem.bind(this);
     this.changeInput = this.changeInput.bind(this);
+    this.getLis = this.getLis.bind(this);
   }
-  changeInput(event:any){
+  changeInput(event:ChangeEvent<HTMLInputElement>){
     this.setState({inputValue:event.target.value});
   }
   editItem(id:number,name:string){
@@ -116,39 +120,43 @@ class App extends Component<IProps, IState>  {
     }))
   }
   searchItem(){
-    let list :object[] = this.state.list.concat();
+    let list :IList[] = this.state.list.concat();
     let value = this.state.inputValue;
-    let result :object[] = list.filter((item:any) => item.name.indexOf(value)>-1);
+    let result :IList[] = list.filter((item) => item.name.indexOf(value)>-1);
+    this.btnType = 'search';
     this.setState({
-      search:result,
-      btnType:'search'
+      search:result
     })
   }
   deleteItem(id:number){
-      this.setState((prevState)=> ({
-        list:prevState.list.filter((item:any)=> (item.id!=id)),
-        btnType:'delete'
-      }))
+    this.btnType = 'delete'
+    this.setState((prevState)=> ({
+      list:prevState.list.filter((item)=> (item.id!=id))
+    }))
   }
   addItem(){
     if(this.state.inputValue === ''){
       return;
     }
-    this.setState((prevState:any)=> ({
-      list:prevState.list.concat({'name':this.state.inputValue,'id':Date.now()}),
-      btnType:'add'
+    this.btnType = 'add';
+    this.setState((prevState)=> ({
+      list:prevState.list.concat({'name':this.state.inputValue,'id':Date.now()})
     }))
   }
-  render() {
-    let value :string = this.state.inputValue;
-    let btnType = this.state.btnType;//add，delete，search
+  getLis(){
+    const btnType = this.btnType;//add，delete，search
     let lis = null;
-    let arr :object[]= [];
+    let arr :IList[]= [];
 
     arr = btnType === 'search'?this.state.search:this.state.list
-    lis = arr.map((item:any) => 
+    lis = arr.map((item) => 
       <ItemInput key={item.id} onDeleteItem={this.deleteItem} onEditItem ={this.editItem} itemObj={item} />
     )
+    return lis;
+  }
+  render() {
+    const value :string = this.state.inputValue;
+    const lis = this.getLis();
     return (
       <div className="App">
         <input type="text" value={value} onChange={this.changeInput}/>
